@@ -247,6 +247,21 @@ app.put('/todos/:id', function(req, res) {
 
 });
 
+// Post user
+app.post('/user', function(req, res) {
+  var body = _.pick(req.body, ['email', 'password']);
+  // console.log(body);
+  db.user.create(body).then(function(user) {
+    console.log('User created');
+    console.log(user.toJSON());
+    res.json(user.toJSON());
+  }, function(e) {
+    console.log('Error occurred: ')
+    console.log(e);
+    res.status(400).json(e);
+  });
+});
+
 db.sequelize.sync().then(function() {
   app.listen(PORT, function() {
     console.log('Express listening on port ' + PORT + '!');
