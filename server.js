@@ -254,7 +254,7 @@ app.post('/user', function(req, res) {
   db.user.create(body).then(function(user) {
     console.log('User created');
     console.log(user.toJSON());
-    res.json(user.toJSON());
+    res.json(user.toPublicJSON());
   }, function(e) {
     console.log('Error occurred: ')
     console.log(e);
