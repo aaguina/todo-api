@@ -250,7 +250,7 @@ app.put('/todos/:id', function(req, res) {
 // Post user
 app.post('/user', function(req, res) {
   var body = _.pick(req.body, ['email', 'password']);
-  // console.log(body);
+  console.log(body);
   db.user.create(body).then(function(user) {
     console.log('User created');
     console.log(user.toJSON());
