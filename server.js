@@ -1,4 +1,5 @@
 var express = require('express');
+var bcrypt = require('bcrypt');
 var app = express();
 var PORT = process.env.PORT || 3000;
 var bodyParser = require('body-parser');
@@ -248,9 +249,9 @@ app.put('/todos/:id', function(req, res) {
 });
 
 // Post user
-app.post('/user', function(req, res) {
+app.post('/users', function(req, res) {
   var body = _.pick(req.body, ['email', 'password']);
-  console.log(body);
+  // console.log(body);
   db.user.create(body).then(function(user) {
     console.log('User created');
     console.log(user.toJSON());
@@ -260,6 +261,46 @@ app.post('/user', function(req, res) {
     console.log(e);
     res.status(400).json(e);
   });
+});
+
+// POST /users/login
+app.post('/users/login', function(req, res) {
+  var body = _.pick(req.body, ['email', 'password']);
+
+  // We want to create a method called
+  // to maintain the code small for the calls db.user.authenticate
+  db.user.authenticate(body).then(function(user) {
+    res.json(user.toPublicJSON());
+  }, function(e) {
+    res.sendStatus(401);
+  });
+
+  // if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+  //   console.log('Some of the parameters are not ok.');
+  //   res.sendStatus(400);
+  // } else {
+  //   console.log('Email: ' + body.email + ' and Passord: ' + body.password);
+  //   db.user.findOne({
+  //     where: {
+  //       email: body.email
+  //     }
+  //   }).then(function(userQuery) {
+  //     if (!userQuery || !bcrypt.compareSync(body.password, userQuery.password_hash)) {
+  //       res.sendStatus(401);
+  //       // var hashedPassword = bcrypt.hashSync(body.password, userQuery.salt);
+  //       // if (hashedPassword === userQuery.password_hash) {
+  //       //   res.json(userQuery.toPublicJSON());
+  //       // } else {
+  //       //   res.status(400).send('Invalid password');
+  //       // }
+  //     } else {
+  //       res.json(userQuery.toPublicJSON());
+  //       // res.status(401).send('No matching email found.');
+  //     }
+  //   }, function(e) {
+  //     res.status(500).json(e);
+  //   });
+  // }
 });
 
 db.sequelize.sync().then(function() {
