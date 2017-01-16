@@ -1,5 +1,4 @@
 var express = require('express');
-var bcrypt = require('bcrypt');
 var app = express();
 var PORT = process.env.PORT || 3000;
 var bodyParser = require('body-parser');
@@ -270,7 +269,7 @@ app.post('/users/login', function(req, res) {
   // We want to create a method called
   // to maintain the code small for the calls db.user.authenticate
   db.user.authenticate(body).then(function(user) {
-    res.json(user.toPublicJSON());
+    res.header('Auth', user.generateToken('authentication')).json(user.toPublicJSON());
   }, function(e) {
     res.sendStatus(401);
   });
