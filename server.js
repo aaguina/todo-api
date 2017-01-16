@@ -5,6 +5,7 @@ var bodyParser = require('body-parser');
 var _ = require('underscore');
 var db = require('./db.js');
 var todos = [];
+var middleware = require('./middleware.js')(db);
 
 //var todoNextId = 1;
 
@@ -32,7 +33,7 @@ app.get('/', function(req, res) {
 // GET /todos
 // GET /todos/:id
 
-app.get('/todos', function(req, res) {
+app.get('/todos', middleware.requireAuthentication, function(req, res) {
   // var queryParams = _.pick(req.query, "completed");
   // var queryParams = req.query;
   var query = req.query;
@@ -82,7 +83,7 @@ app.get('/todos', function(req, res) {
   // res.json(filteredTodos);
 });
 
-app.get('/todos/:id', function(req, res) {
+app.get('/todos/:id', middleware.requireAuthentication, function(req, res) {
   var todoId = parseInt(req.params.id, 10);
   db.todo.findById(todoId).then(function(todo) {
     if (todo) {
@@ -127,7 +128,7 @@ app.get('/todos/:id', function(req, res) {
 });
 
 // POST /todos
-app.post('/todos', function(req, res) {
+app.post('/todos', middleware.requireAuthentication, function(req, res) {
   var body = _.pick(req.body, ["completed", "description"]);
 
   // call create on db.todos
@@ -165,7 +166,7 @@ app.post('/todos', function(req, res) {
   // res.json(body);
 });
 
-app.delete('/todos/:id', function(req, res) {
+app.delete('/todos/:id', middleware.requireAuthentication, function(req, res) {
   var todoId = parseInt(req.params.id, 10);
 
   db.todo.destroy({
@@ -196,7 +197,7 @@ app.delete('/todos/:id', function(req, res) {
 });
 
 // PUT /todos/:id
-app.put('/todos/:id', function(req, res) {
+app.put('/todos/:id', middleware.requireAuthentication, function(req, res) {
   var todoId = parseInt(req.params.id, 10);
   var body = _.pick(req.body, ["completed", "description"]);
   var attributes = {};
@@ -269,7 +270,12 @@ app.post('/users/login', function(req, res) {
   // We want to create a method called
   // to maintain the code small for the calls db.user.authenticate
   db.user.authenticate(body).then(function(user) {
-    res.header('Auth', user.generateToken('authentication')).json(user.toPublicJSON());
+    var token = user.generateToken('authentication');
+    if (token) {
+      res.header('Auth', token).json(user.toPublicJSON());
+    } else {
+      res.sendStatus(401);
+    }
   }, function(e) {
     res.sendStatus(401);
   });
