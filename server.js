@@ -289,46 +289,68 @@ app.post('/users', function(req, res) {
 // POST /users/login
 app.post('/users/login', function(req, res) {
   var body = _.pick(req.body, ['email', 'password']);
+  var userInstance;
 
   // We want to create a method called
   // to maintain the code small for the calls db.user.authenticate
   db.user.authenticate(body).then(function(user) {
     var token = user.generateToken('authentication');
-    if (token) {
-      res.header('Auth', token).json(user.toPublicJSON());
-    } else {
-      res.sendStatus(401);
-    }
-  }, function(e) {
-    res.sendStatus(401);
-  });
+    userInstance = user;
 
-  // if (typeof body.email !== 'string' || typeof body.password !== 'string') {
-  //   console.log('Some of the parameters are not ok.');
-  //   res.sendStatus(400);
-  // } else {
-  //   console.log('Email: ' + body.email + ' and Passord: ' + body.password);
-  //   db.user.findOne({
-  //     where: {
-  //       email: body.email
-  //     }
-  //   }).then(function(userQuery) {
-  //     if (!userQuery || !bcrypt.compareSync(body.password, userQuery.password_hash)) {
-  //       res.sendStatus(401);
-  //       // var hashedPassword = bcrypt.hashSync(body.password, userQuery.salt);
-  //       // if (hashedPassword === userQuery.password_hash) {
-  //       //   res.json(userQuery.toPublicJSON());
-  //       // } else {
-  //       //   res.status(400).send('Invalid password');
-  //       // }
-  //     } else {
-  //       res.json(userQuery.toPublicJSON());
-  //       // res.status(401).send('No matching email found.');
-  //     }
-  //   }, function(e) {
-  //     res.status(500).json(e);
-  //   });
-  // }
+    return db.token.create({
+      token: token
+    });
+    // if (token) {
+    //   res.header('Auth', token).json(user.toPublicJSON());
+    // } else {
+    //   res.sendStatus(401);
+    // }
+  }).then(function(tokenInstance) {
+    console.log('User was authenticated!');
+    // console.log(userInstance);
+    res.header('Auth', tokenInstance.token).json(userInstance.toPublicJSON());
+  }).catch(function(e) {
+    console.log(e);
+    // console.log('Authentication failed!!');
+    // console.log(userInstance);
+    res.sendStatus(401);
+  })
+});
+// if (typeof body.email !== 'string' || typeof body.password !== 'string') {
+//   console.log('Some of the parameters are not ok.');
+//   res.sendStatus(400);
+// } else {
+//   console.log('Email: ' + body.email + ' and Passord: ' + body.password);
+//   db.user.findOne({
+//     where: {
+//       email: body.email
+//     }
+//   }).then(function(userQuery) {
+//     if (!userQuery || !bcrypt.compareSync(body.password, userQuery.password_hash)) {
+//       res.sendStatus(401);
+//       // var hashedPassword = bcrypt.hashSync(body.password, userQuery.salt);
+//       // if (hashedPassword === userQuery.password_hash) {
+//       //   res.json(userQuery.toPublicJSON());
+//       // } else {
+//       //   res.status(400).send('Invalid password');
+//       // }
+//     } else {
+//       res.json(userQuery.toPublicJSON());
+//       // res.status(401).send('No matching email found.');
+//     }
+//   }, function(e) {
+//     res.status(500).json(e);
+//   });
+// }
+// });
+
+//DELETE /user/login
+app.delete('/users/login', middleware.requireAuthentication, function(req, res) {
+  req.token.destroy().then(function() {
+    res.sendStatus(204);
+  }).catch(function() {
+    res.sendStatus(500);
+  })
 });
 
 db.sequelize.sync({

@@ -29,6 +29,7 @@ var db = {};
 // Importing their modules to the db object
 db.todo = sequelize.import(__dirname + '/models/todo.js');
 db.user = sequelize.import(__dirname + '/models/user.js');
+db.token = sequelize.import(__dirname + '/models/token.js');
 db.sequelize = sequelize; // Adds the sequelize to the db object
 db.Sequelize = Sequelize; // Adds the Sequelize modules to the db object
 
